@@ -9,7 +9,7 @@ related tasks.
 
 The test suite currently contains:
 
-- A test to stress the [Babe](https://github.com/babel/babel)
+- A test to stress the [Babel](https://github.com/babel/babel)
   transformation logic using the `es2015` preset on a 196K
   ES2015 module containing the untranspiled [Vue](https://github.com/vuejs/vue)
   source code.
