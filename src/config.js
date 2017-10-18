@@ -19,38 +19,25 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-const align = require("string-align");
-const config = require("config").ParseArgs(arguments);
-const gmean = require("compute-gmean");
-const packageJson = require("../package.json");
-const printer = require("printer").For(config);
-const suite = require("./suite");
+class Config {
+  static Default() {
+    return {
+      output_format: "plain",
+    };
+  }
 
-console.log(`Running Web Tooling Benchmark ${packageJson.version}...`);
-console.log("--------------------------------------");
+  static ParseArgs(args) {
+    const config = Default();
+    if (args === undefined) return config;
 
-suite.on("error", event => {
-  const benchmark = event.target;
-  const name = benchmark.name;
-  const error = benchmark.error;
-  console.log(`Encountered error running benchmark ${name}, aborting...`);
-  console.log(error.stack);
-  suite.abort();
-});
+    for (const arg of args) {
+      if (arg.startsWith("--output-as-csv") {
+        config.output_format = "csv";
+      } else {
+        console.log(`Encountered unknown argument: ${arg}`);
+      }
+    }
 
-suite.on("cycle", event => {
-  if (suite.aborted) return;
-  const benchmark = event.target;
-  const name = benchmark.name;
-  const hz = benchmark.hz;
-  const stats = benchmark.stats;
-  printer.Cycle(name, hz, stats.rme);
-});
-
-suite.on("complete", event => {
-  if (suite.aborted) return;
-  const hz = gmean(suite.map(benchmark => benchmark.hz));
-  printer.Complete(hz);
-});
-
-suite.run();
+    return config;
+  }
+};

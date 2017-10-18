@@ -19,38 +19,49 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-const align = require("string-align");
-const config = require("config").ParseArgs(arguments);
-const gmean = require("compute-gmean");
-const packageJson = require("../package.json");
-const printer = require("printer").For(config);
-const suite = require("./suite");
+class Printer {
+  static For(config) {
+    switch (format.output_format) {
+      case "plain": return new PlainPrinter();
+      case "csv": return new CsvPrinter(config);
+      default:
+        console.log(`Invalid format: ${format}`);
+        return new PlainPrinter();
+    }
+  }
+};
 
-console.log(`Running Web Tooling Benchmark ${packageJson.version}...`);
-console.log("--------------------------------------");
+class PlainPrinter {
+  static Cycle(name, hz, rme) {
+    console.log(
+      `${align(name, 14, "right")}: ${align(
+        hz.toFixed(2),
+        5,
+        "right"
+      )} runs/sec ${align(`\xb1${rme.toFixed(2)}%`, 7, "right")}`
+    );
+  }
 
-suite.on("error", event => {
-  const benchmark = event.target;
-  const name = benchmark.name;
-  const error = benchmark.error;
-  console.log(`Encountered error running benchmark ${name}, aborting...`);
-  console.log(error.stack);
-  suite.abort();
-});
+  static Complete(hz) {
+    console.log("--------------------------------------");
+    console.log(`Geometric mean: ${align(hz.toFixed(2), 5, "right")} runs/sec`);
+  }
+};
 
-suite.on("cycle", event => {
-  if (suite.aborted) return;
-  const benchmark = event.target;
-  const name = benchmark.name;
-  const hz = benchmark.hz;
-  const stats = benchmark.stats;
-  printer.Cycle(name, hz, stats.rme);
-});
+class CsvPrinter {
+  constructor(config) {
+    this.config = config;
+  }
 
-suite.on("complete", event => {
-  if (suite.aborted) return;
-  const hz = gmean(suite.map(benchmark => benchmark.hz));
-  printer.Complete(hz);
-});
+  static Cycle(name, hz, rme) {
+    console.log(
+      `${align(name, 14, "right")}: ${align(
+        hz.toFixed(2),
+        5,
+        "right"
+      )} runs/sec ${align(`\xb1${rme.toFixed(2)}%`, 7, "right")}`
+    );
+  }
 
-suite.run();
+  static Complete(hz) {}
+};
